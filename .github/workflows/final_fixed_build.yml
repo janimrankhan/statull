@@ -13,33 +13,27 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup Java JDK 11
+    - name: Setup Java JDK 17
       uses: actions/setup-java@v4
       with:
-        java-version: '11' # پرانے پلگ انز کے لیے جاوا 11 سب سے بہترین اور مستحکم ہے
+        java-version: '17' # AGP 9.x کے لیے جاوا 17 لازمی ہے
         distribution: 'zulu'
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        gradle-version: 7.6.1 # مستحکم گریڈل ورژن جو پرانے ٹولز کو سپورٹ کرتا ہے
+        gradle-version: 9.3.1 # آپ کی gradle-wrapper.properties کے مطابق ورژن سیٹ کر دیا گیا ہے
 
-    - name: Force Downgrade Gradle Wrapper
+    - name: Configure Android Project Settings
       run: |
-        mkdir -p gradle/wrapper
-        echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
-        echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
-        echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
-        echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
-        echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.6.1-bin.zip" >> gradle/wrapper/gradle-wrapper.properties
-
-        # پرانی فائلز کنفیگریشن سیٹ کرنا
+        # اینڈرائیڈ کی پراپرٹیز کو جدید ورژنز کے مطابق سیٹ کرنا
         echo "android.useAndroidX=true" > gradle.properties
         echo "android.enableJetifier=true" >> gradle.properties
+        echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
 
     - name: Build APK Directly from Project
       run: |
-        gradle wrapper --gradle-version 7.6.1
+        # آپ کی اپنی wrapper فائل کو استعمال کرتے ہوئے بلڈ رن کرنا
         chmod +x gradlew
         ./gradlew assembleDebug --no-build-cache --stacktrace
 
