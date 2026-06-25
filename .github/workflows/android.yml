@@ -16,12 +16,15 @@ jobs:
     - name: Set up NodeJS
       uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 24
 
-    - name: Install Capacitor & Build Android
+    - name: Install Capacitor & Create Dummy Assets
       run: |
         npm init -y
         npm install @capacitor/core @capacitor/cli
+        # Capacitor کی ضرورت کے مطابق بنیادی فائلیں بنانا
+        mkdir -p src
+        touch index.html
         npx cap init "Statull App" "com.janimrankhan.statull" --web-dir=.
         npm install @capacitor/android
         npx cap add android
