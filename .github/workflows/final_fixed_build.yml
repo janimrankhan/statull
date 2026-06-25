@@ -1,0 +1,136 @@
+name: Final Custom APK Build
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Java JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'zulu'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: 8.5
+
+    - name: Build Android Structure Clean
+      run: |
+        # کلاؤڈ میموری میں پرانے فولڈرز کا تصادم ختم کرنا
+        rm -rf android-app separate-android-app fresh-app
+        
+        mkdir -p fresh-app/app/src/main/java/statull/app/webview
+        mkdir -p fresh-app/app/src/main/assets
+        mkdir -p fresh-app/app/src/main/res/values
+
+        # صرف ویب سائٹ کی فائلوں کو کلاؤڈ میں اثاثوں (Assets) کے اندر کاپی کرنا
+        find . -maxdepth 1 ! -name 'fresh-app' ! -name 'app' ! -name 'gradle' ! -name '.github' ! -name '.git' ! -name 'build.gradle' ! -name 'gradle.properties' ! -name 'settings.gradle' ! -name 'gradlew' ! -name 'gradlew.bat' ! -name '.' ! -name '..' -exec cp -r {} fresh-app/app/src/main/assets/ \; 2>/dev/null || true
+
+        # انڈیکس فائل مینیج کرنا
+        if [ ! -f fresh-app/app/src/main/assets/index.html ]; then
+          find . -maxdepth 2 -name "index.html" -exec cp {} fresh-app/app/src/main/assets/ \; 2>/dev/null || true
+        fi
+
+        # ڈیفالٹ تھیم اور کلرز بنانا تاکہ ایپ کریش نہ ہو
+        cat << 'EOF' > fresh-app/app/src/main/res/values/styles.xml
+        <resources>
+            <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar"></style>
+        </resources>
+        EOF
+
+        # آپ کے اپنے کوڈ کے مطابق اینڈرائیڈ ایکس سیٹنگز اور کنفیگریشن فائلیں بنانا
+        echo "include ':app'" > fresh-app/settings.gradle
+        echo "android.useAndroidX=true" > fresh-app/gradle.properties
+        echo "android.enableJetifier=true" >> fresh-app/gradle.properties
+
+        # کلاؤڈ روٹ بلڈ فائل
+        cat << 'EOF' > fresh-app/build.gradle
+        buildscript {
+            repositories { google(); mavenCentral() }
+            dependencies { classpath 'com.android.tools.build:gradle:8.2.2' }
+        }
+        allprojects { repositories { google(); mavenCentral() } }
+        EOF
+
+        # آپ کی لوکل فائل کے مطابق کلاؤڈ ایپ بلڈ فائل بنانا ( compileSdk 35 کے ساتھ)
+        cat << 'EOF' > fresh-app/app/build.gradle
+        plugins { id 'com.android.application' }
+        android {
+            namespace 'statull.app.webview'
+            compileSdk 35
+            defaultConfig {
+                applicationId 'statull.app.webview'
+                minSdk 27
+                targetSdk 35
+                versionCode 16
+                versionName 'v4.4'
+            }
+        }
+        dependencies {
+            implementation 'androidx.appcompat:appcompat:1.7.1'
+            implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+            implementation 'com.google.android.gms:play-services-auth:21.6.0'
+            implementation 'com.google.android.gms:play-services-location:21.3.0'
+            implementation 'com.onesignal:OneSignal:'
+        }
+        EOF
+
+        # درست مینی فیسٹ فائل کا پاتھ سیٹ کرنا
+        cat << 'EOF' > fresh-app/app/src/main/AndroidManifest.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <manifest xmlns:android="http://android.com" package="statull.app.webview">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <application android:theme="@style/AppTheme" android:label="Statull" android:allowBackup="true">
+                <activity android:name=".MainActivity" android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN" />
+                        <category android:name="android.intent.category.LAUNCHER" />
+                    </intent-filter>
+                </activity>
+            </application>
+        </manifest>
+        EOF
+
+        # جاوا رن ٹائم فائل
+        cat << 'EOF' > fresh-app/app/src/main/java/statull/app/webview/MainActivity.java
+        package statull.app.webview;
+        import android.os.Bundle;
+        import android.webkit.WebView;
+        import android.webkit.WebViewClient;
+        import androidx.appcompat.app.AppCompatActivity;
+        public class MainActivity extends AppCompatActivity {
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                WebView webView = new WebView(this);
+                webView.getSettings().setJavaScriptEnabled(true);
+                webView.getSettings().setDomStorageEnabled(true);
+                webView.setWebViewClient(new WebViewClient());
+                webView.loadUrl("file:///android_asset/index.html");
+                setContentView(webView);
+            }
+        }
+        EOF
+
+    - name: Pure Build Without Cache
+      run: |
+        cd fresh-app
+        gradle wrapper
+        chmod +x gradlew
+        ./gradlew assembleDebug --no-build-cache
+
+    - name: Upload Finished APK
+      uses: actions/with-artifact@v4
+      with:
+        name: Statull-App-APK
+        path: fresh-app/app/build/outputs/apk/debug/app-debug.apk
