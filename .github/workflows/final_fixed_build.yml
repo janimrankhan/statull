@@ -5,6 +5,9 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # گٹ ہب کی نوڈ وارننگ کو ختم کرنے کے لیے
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,27 +16,26 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup Java JDK 17
+    - name: Setup Java JDK 21
       uses: actions/setup-java@v4
       with:
-        java-version: '17' # AGP 9.x کے لیے جاوا 17 لازمی ہے
+        java-version: '21' # AGP 9.1.1 کو بغیر کسی رکاوٹ کے رن کرنے کے لیے جاوا 21 لازمی ہے
         distribution: 'zulu'
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        gradle-version: 9.3.1 # آپ کی gradle-wrapper.properties کے مطابق ورژن سیٹ کر دیا گیا ہے
+        gradle-version: 9.3.1
 
     - name: Configure Android Project Settings
       run: |
-        # اینڈرائیڈ کی پراپرٹیز کو جدید ورژنز کے مطابق سیٹ کرنا
+        # اینڈرائیڈ رن ٹائم کی ضروری پراپرٹیز کو فورس کرنا
         echo "android.useAndroidX=true" > gradle.properties
         echo "android.enableJetifier=true" >> gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
 
     - name: Build APK Directly from Project
       run: |
-        # آپ کی اپنی wrapper فائل کو استعمال کرتے ہوئے بلڈ رن کرنا
         chmod +x gradlew
         ./gradlew assembleDebug --no-build-cache --stacktrace
 
