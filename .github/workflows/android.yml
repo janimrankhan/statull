@@ -1,4 +1,4 @@
-name: Build Android APK Final Fix
+name: Super Clean APK Build
 
 on:
   push:
@@ -24,35 +24,38 @@ jobs:
       with:
         gradle-version: 8.5
 
-    - name: Build Android Structure Clean
+    - name: Generate Fresh Android Project
       run: |
-        rm -rf separate-android-app
-        mkdir -p separate-android-app/app/src/main/java/com/janimrankhan/statull
-        mkdir -p separate-android-app/app/src/main/assets
-        mkdir -p separate-android-app/app/src/main/res/values
+        # پرانے تمام خراب فولڈرز اور فائلیں کلاؤڈ میموری سے صاف کرنا
+        rm -rf android-app separate-android-app app build.gradle settings.gradle gradle.properties gradlew gradlew.bat gradle
+        
+        # برانڈ نیو فولڈر اسٹرکچر بنانا
+        mkdir -p fresh-app/app/src/main/java/com/janimrankhan/statull
+        mkdir -p fresh-app/app/src/main/assets
+        mkdir -p fresh-app/app/src/main/res/values
 
-        # ویب سائٹ کی فائلیں کاپی کرنا
-        find . -maxdepth 1 ! -name 'separate-android-app' ! -name 'app' ! -name 'gradle' ! -name '.github' ! -name '.git' ! -name 'build.gradle' ! -name 'gradle.properties' ! -name 'settings.gradle' ! -name 'gradlew' ! -name 'gradlew.bat' ! -name '.' ! -name '..' -exec cp -r {} separate-android-app/app/src/main/assets/ \; 2>/dev/null || true
+        # آپ کی صرف ویب فائلوں کو نئے اثاثوں میں منتقل کرنا
+        find . -maxdepth 1 ! -name 'fresh-app' ! -name '.github' ! -name '.git' ! -name '.' ! -name '..' -exec cp -r {} fresh-app/app/src/main/assets/ \; 2>/dev/null || true
 
-        # انڈیکس فائل مینیج کرنا
-        if [ ! -f separate-android-app/app/src/main/assets/index.html ]; then
-          find . -maxdepth 2 -name "index.html" -exec cp {} separate-android-app/app/src/main/assets/ \; 2>/dev/null || true
+        # انڈیکس فائل کی موجودگی یقینی بنانا
+        if [ ! -f fresh-app/app/src/main/assets/index.html ]; then
+          find . -maxdepth 2 -name "index.html" -exec cp {} fresh-app/app/src/main/assets/ \; 2>/dev/null || true
         fi
 
-        # ڈیفالٹ تھیم بنانا تاکہ ایپ کریش نہ ہو
-        cat << 'EOF' > separate-android-app/app/src/main/res/values/styles.xml
+        # نئی تھیم فائل بنانا تاکہ کریش نہ ہو
+        cat << 'EOF' > fresh-app/app/src/main/res/values/styles.xml
         <resources>
             <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar"></style>
         </resources>
         EOF
 
-        # کنفیگریشن فائلیں بنانا
-        echo "include ':app'" > separate-android-app/settings.gradle
-        echo "android.useAndroidX=true" > separate-android-app/gradle.properties
-        echo "android.enableJetifier=true" >> separate-android-app/gradle.properties
+        # اینڈرائیڈ ایکس (AndroidX) کی پراپرٹیز یہاں زبردستی ایڈ کرنا
+        echo "include ':app'" > fresh-app/settings.gradle
+        echo "android.useAndroidX=true" > fresh-app/gradle.properties
+        echo "android.enableJetifier=true" >> fresh-app/gradle.properties
 
-        # مین بلڈ فائل
-        cat << 'EOF' > separate-android-app/build.gradle
+        # روٹ بلڈ فائل
+        cat << 'EOF' > fresh-app/build.gradle
         buildscript {
             repositories { google(); mavenCentral() }
             dependencies { classpath 'com.android.tools.build:gradle:8.2.2' }
@@ -61,7 +64,7 @@ jobs:
         EOF
 
         # ایپ بلڈ فائل
-        cat << 'EOF' > separate-android-app/app/build.gradle
+        cat << 'EOF' > fresh-app/app/build.gradle
         plugins { id 'com.android.application' }
         android {
             namespace 'com.janimrankhan.statull'
@@ -79,8 +82,8 @@ jobs:
         }
         EOF
 
-        # مینی فیسٹ فائل (غلط لنک یہاں درست کر دیا گیا ہے)
-        cat << 'EOF' > separate-android-app/app/src/main/AndroidManifest.xml
+        # درست مینی فیسٹ فائل
+        cat << 'EOF' > fresh-app/app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://android.com" package="com.janimrankhan.statull">
             <uses-permission android:name="android.permission.INTERNET" />
@@ -96,7 +99,7 @@ jobs:
         EOF
 
         # جاوا فائل
-        cat << 'EOF' > separate-android-app/app/src/main/java/com/janimrankhan/statull/MainActivity.java
+        cat << 'EOF' > fresh-app/app/src/main/java/com/janimrankhan/statull/MainActivity.java
         package com.janimrankhan.statull;
         import android.os.Bundle;
         import android.webkit.WebView;
@@ -116,15 +119,15 @@ jobs:
         }
         EOF
 
-    - name: Generate Wrapper and Build APK File Clean
+    - name: Pure Build Without Cache
       run: |
-        cd separate-android-app
+        cd fresh-app
         gradle wrapper
         chmod +x gradlew
-        ./gradlew assembleDebug --stacktrace --no-build-cache
+        ./gradlew assembleDebug --no-build-cache
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
         name: Statull-App-APK
-        path: separate-android-app/app/build/outputs/apk/debug/app-debug.apk
+        path: fresh-app/app/build/outputs/apk/debug/app-debug.apk
