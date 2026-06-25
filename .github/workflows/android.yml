@@ -29,9 +29,17 @@ jobs:
         mkdir -p android-app/app/src/main/java/com/janimrankhan/statull
         mkdir -p android-app/app/src/main/assets
 
-        # صرف ویب سائٹ سے متعلقہ فائلیں کاپی کرنا (تاکہ لوپ اور ایرر نہ بنے)
-        find . -maxdepth 1 ! -name 'android-app' ! -name '.github' ! -name '.' ! -name '..' -exec cp -r {} android-app/app/src/main/assets/ \;
+        # فائلوں کی کلین کاپی (صرف ویب فائلیں)
+        rsync -av --exclude='android-app' --exclude='.github' --exclude='.git' ./ android-app/app/src/main/assets/
 
+        # اگر انڈیکس فائل کسی فولڈر میں ہے تو اسے باہر لانا
+        cd android-app/app/src/main/assets/
+        if [ ! -f index.html ]; then
+          find . -name "index.html" -exec cp {} . \;
+        fi
+        cd ../../../..
+
+        # پروجیکٹ سیٹنگز بنانا
         echo "include ':app'" > android-app/settings.gradle
 
         cat << 'EOF' > android-app/build.gradle
@@ -54,10 +62,9 @@ jobs:
                 versionCode 1
                 versionName "1.0"
             }
-            buildTypes {
-                release {
-                    minifyEnabled false
-                }
+            aaptOptions {
+                cruncherEnabled = false
+                useNewCruncher = false
             }
         }
         dependencies {
@@ -105,7 +112,7 @@ jobs:
         cd android-app
         gradle wrapper
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleDebug --stacktrace
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
