@@ -1,11 +1,11 @@
-package sngine.app.webview;
+package statull.app.webview;
 
 class SngineConfig {
 
     /* -- CONFIG VARIABLES -- */
 
     //complete URL of your Sngine website
-    static String Sngine_URL = "https://demo.sngine.com/";
+    static String Statull_URL = "https://statull.com/";
 
     // OneSignal APP Id
     static String Sngine_ONESIGNAL_APP_ID = "";
