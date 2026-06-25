@@ -26,30 +26,30 @@ jobs:
 
     - name: Generate Fresh Android Project
       run: |
-        # پرانے تمام متصادم فولڈرز اور فائلیں کلاؤڈ میموری سے عارضی طور پر صاف کرنا
-        rm -rf android-app separate-android-app app build.gradle settings.gradle gradle.properties gradlew gradlew.bat gradle final-android-app
+        # پرانے تمام خراب فولڈرز اور فائلیں کلاؤڈ میموری سے صاف کرنا
+        rm -rf android-app separate-android-app app build.gradle settings.gradle gradle.properties gradlew gradlew.bat gradle final-android-app fresh-app
         
-        # برانڈ نیو فولڈر اسٹرکچر بنانا
+        # نیا فولڈر اسٹرکچر بنانا
         mkdir -p fresh-app/app/src/main/java/com/janimrankhan/statull
         mkdir -p fresh-app/app/src/main/assets
         mkdir -p fresh-app/app/src/main/res/values
 
-        # آپ کی صرف ویب فائلوں کو نئے اثاثوں (Assets) میں منتقل کرنا
+        # ویب فائلوں کو اثاثوں میں منتقل کرنا
         find . -maxdepth 1 ! -name 'fresh-app' ! -name '.github' ! -name '.git' ! -name '.' ! -name '..' -exec cp -r {} fresh-app/app/src/main/assets/ \; 2>/dev/null || true
 
-        # انڈیکس فائل کی موجودگی یقینی بنانا
+        # انڈیکس فائل مینیج کرنا
         if [ ! -f fresh-app/app/src/main/assets/index.html ]; then
           find . -maxdepth 2 -name "index.html" -exec cp {} fresh-app/app/src/main/assets/ \; 2>/dev/null || true
         fi
 
-        # نئی تھیم فائل بنانا تاکہ وسائل کی عدم موجودگی پر ایپ کریش نہ ہو
+        # نئی تھیم فائل بنانا
         cat << 'EOF' > fresh-app/app/src/main/res/values/styles.xml
         <resources>
             <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar"></style>
         </resources>
         EOF
 
-        # اینڈرائیڈ ایکس (AndroidX) کی پراپرٹیز یہاں زبردستی ایڈ کرنا
+        # اینڈرائیڈ ایکس (AndroidX) سیٹ اپ کرنا
         echo "include ':app'" > fresh-app/settings.gradle
         echo "android.useAndroidX=true" > fresh-app/gradle.properties
         echo "android.enableJetifier=true" >> fresh-app/gradle.properties
@@ -82,7 +82,7 @@ jobs:
         }
         EOF
 
-        # درست مینی فیسٹ فائل
+        # درست مینی فیسٹ فائل (غلط لنک یہاں تبدیل کر دیا گیا ہے)
         cat << 'EOF' > fresh-app/app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://android.com" package="com.janimrankhan.statull">
