@@ -29,7 +29,7 @@ jobs:
         # کلاؤڈ میموری پرانے فولڈرز سے مکمل صاف کرنا
         rm -rf android-app separate-android-app fresh-app
         
-        # پیکیج نیم statull.app.webview کے مطابق فولڈرز بنانا
+        # پیکیج نیم کے مطابق فولڈرز بنانا
         mkdir -p fresh-app/app/src/main/java/statull/app/webview
         mkdir -p fresh-app/app/src/main/assets
         mkdir -p fresh-app/app/src/main/res/values
@@ -49,10 +49,11 @@ jobs:
         </resources>
         EOF
 
-        # اینڈرائیڈ ایکس سیٹنگز بنانا
+        # اینڈرائیڈ ایکس سیٹنگز بنانا اور ورژن 35 کی وارننگ سپریس کرنا
         echo "include ':app'" > fresh-app/settings.gradle
         echo "android.useAndroidX=true" > fresh-app/gradle.properties
         echo "android.enableJetifier=true" >> fresh-app/gradle.properties
+        echo "android.suppressUnsupportedCompileSdk=35" >> fresh-app/gradle.properties
 
         # کلاؤڈ روٹ بلڈ فائل
         cat << 'EOF' > fresh-app/build.gradle
@@ -63,7 +64,7 @@ jobs:
         allprojects { repositories { google(); mavenCentral() } }
         EOF
 
-        # ایپ بلڈ فائل (بالکل آپ کی لوکل فائل کی سیٹنگز کے مطابق)
+        # ایپ بلڈ فائل
         cat << 'EOF' > fresh-app/app/build.gradle
         plugins { id 'com.android.application' }
         android {
@@ -85,13 +86,13 @@ jobs:
         }
         EOF
 
-        # درست مینی فیسٹ فائل
+        # مینی فیسٹ فائل (ٹیگز اور ناموں کو یہاں مکمل درست کر دیا گیا ہے)
         cat << 'EOF' > fresh-app/app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
-        <manifest xmlns:android="http://android.com" package="statull.app.webview">
+        <manifest xmlns:android="http://android.com">
             <uses-permission android:name="android.permission.INTERNET" />
             <application android:theme="@style/AppTheme" android:label="Statull" android:allowBackup="true">
-                <activity android:name=".MainActivity" android:exported="true">
+                <activity android:name="statull.app.webview.MainActivity" android:exported="true">
                     <intent-filter>
                         <action android:name="android.intent.action.MAIN" />
                         <category android:name="android.intent.category.LAUNCHER" />
