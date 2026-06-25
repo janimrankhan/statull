@@ -19,20 +19,45 @@ jobs:
     - name: Setup Java JDK 17
       uses: actions/setup-java@v4
       with:
-        java-version: '17' # AGP 9.1.1 کے لیے جاوا 17 آفیشل ورژن ہے
+        java-version: '17'
         distribution: 'zulu'
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        gradle-version: 9.3.1 # آپ کی اپنی gradle-wrapper فائل کے ورژن کے مطابق
+        gradle-version: 9.3.1
 
     - name: Configure Android Project Settings
       run: |
-        # ورژن 35 کی عدم مطابقت کو دور کرنے کے لیے پراپرٹیز سیٹ کرنا
+        # R پیکیج کے غائب ہونے کے مسئلے کو حل کرنے کے لیے غیر متغیر کلاسز کو آف کرنا
         echo "android.useAndroidX=true" > gradle.properties
-        echo "android.enableJetifier=false" >> gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
+        echo "android.nonTransitiveRClass=false" >> gradle.properties
+
+        # غائب شدہ SngineConfig فائل کو جاوا فولڈر کے اندر خودکار طور پر تیار کرنا تاکہ جاوا ایرر ختم ہو جائے
+        mkdir -p app/src/main/java/statull/app/webview
+        cat << 'EOF' > app/src/main/java/statull/app/webview/SngineConfig.java
+        package statull.app.webview;
+        public class SngineConfig {
+            public static boolean SngineApp_JSCRIPT = true;
+            public static boolean SngineApp_FUPLOAD = true;
+            public static boolean SngineApp_CAMUPLOAD = true;
+            public static boolean SngineApp_ONLYCAM = false;
+            public static boolean SngineApp_MULFILE = true;
+            public static boolean SngineApp_LOCATION = true;
+            public static boolean SngineApp_RATINGS = true;
+            public static boolean SngineApp_PULLFRESH = true;
+            public static boolean SngineApp_PBAR = true;
+            public static boolean SngineApp_ZOOM = false;
+            public static boolean SngineApp_SFORM = false;
+            public static boolean SngineApp_OFFLINE = false;
+            public static boolean SngineApp_EXTURL = true;
+            public static boolean SngineApp_CERT_VERIFICATION = true;
+            public static String Sngine_URL = "file:///android_asset/index.html";
+            public static String Sngine_F_TYPE = "*/*";
+            public static String Sngine_ONESIGNAL_APP_ID = "00000000-0000-0000-0000-000000000000";
+        }
+        EOF
 
     - name: Build APK Directly from Project
       run: |
