@@ -26,9 +26,10 @@ jobs:
 
     - name: Build Android Structure Clean
       run: |
-        # کلاؤڈ میموری میں پرانے فولڈرز کا تصادم ختم کرنا
+        # کلاؤڈ میموری پرانے فولڈرز سے مکمل صاف کرنا
         rm -rf android-app separate-android-app fresh-app
         
+        # پیکیج نیم statull.app.webview کے مطابق فولڈرز بنانا
         mkdir -p fresh-app/app/src/main/java/statull/app/webview
         mkdir -p fresh-app/app/src/main/assets
         mkdir -p fresh-app/app/src/main/res/values
@@ -41,14 +42,14 @@ jobs:
           find . -maxdepth 2 -name "index.html" -exec cp {} fresh-app/app/src/main/assets/ \; 2>/dev/null || true
         fi
 
-        # ڈیفالٹ تھیم اور کلرز بنانا تاکہ ایپ کریش نہ ہو
+        # ڈیفالٹ تھیم فائل بنانا
         cat << 'EOF' > fresh-app/app/src/main/res/values/styles.xml
         <resources>
             <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar"></style>
         </resources>
         EOF
 
-        # آپ کے اپنے کوڈ کے مطابق اینڈرائیڈ ایکس سیٹنگز اور کنفیگریشن فائلیں بنانا
+        # اینڈرائیڈ ایکس سیٹنگز بنانا
         echo "include ':app'" > fresh-app/settings.gradle
         echo "android.useAndroidX=true" > fresh-app/gradle.properties
         echo "android.enableJetifier=true" >> fresh-app/gradle.properties
@@ -62,7 +63,7 @@ jobs:
         allprojects { repositories { google(); mavenCentral() } }
         EOF
 
-        # آپ کی لوکل فائل کے مطابق کلاؤڈ ایپ بلڈ فائل بنانا (compileSdk 35 کے ساتھ)
+        # ایپ بلڈ فائل (بالکل آپ کی لوکل فائل کی سیٹنگز کے مطابق)
         cat << 'EOF' > fresh-app/app/build.gradle
         plugins { id 'com.android.application' }
         android {
@@ -84,7 +85,7 @@ jobs:
         }
         EOF
 
-        # درست مینی فیسٹ فائل کا پاتھ سیٹ کرنا
+        # درست مینی فیسٹ فائل
         cat << 'EOF' > fresh-app/app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://android.com" package="statull.app.webview">
@@ -100,7 +101,7 @@ jobs:
         </manifest>
         EOF
 
-        # جاوا رن ٹائم فائل
+        # درست پیکیج راستے کے ساتھ جاوا مین فائل
         cat << 'EOF' > fresh-app/app/src/main/java/statull/app/webview/MainActivity.java
         package statull.app.webview;
         import android.os.Bundle;
