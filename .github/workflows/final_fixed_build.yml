@@ -34,11 +34,15 @@ jobs:
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
         echo "android.nonTransitiveRClass=false" >> gradle.properties
 
-        # غائب شدہ SngineConfig فائل کو جاوا فولڈر کے اندر خودکار طور پر تیار کرنا تاکہ جاوا ایرر ختم ہو جائے
+        # پرانی خراب SngineConfig فائل کو صاف کر کے 100٪ درست سنٹیکس کے ساتھ دوبارہ بنانا (تاکہ جاوا بلڈ فیل نہ ہو)
+        rm -f app/src/main/java/statull/app/webview/SngineConfig.java
         mkdir -p app/src/main/java/statull/app/webview
         cat << 'EOF' > app/src/main/java/statull/app/webview/SngineConfig.java
         package statull.app.webview;
+
         public class SngineConfig {
+            public static String Sngine_URL = "https://statull.com/";
+            public static String Sngine_ONESIGNAL_APP_ID = "";
             public static boolean SngineApp_JSCRIPT = true;
             public static boolean SngineApp_FUPLOAD = true;
             public static boolean SngineApp_CAMUPLOAD = true;
@@ -51,11 +55,12 @@ jobs:
             public static boolean SngineApp_ZOOM = false;
             public static boolean SngineApp_SFORM = false;
             public static boolean SngineApp_OFFLINE = false;
-            public static boolean SngineApp_EXTURL = true;
+            public static boolean SngineApp_EXTURL = false;
             public static boolean SngineApp_CERT_VERIFICATION = true;
-            public static String Sngine_URL = "file:///android_asset/index.html";
             public static String Sngine_F_TYPE = "*/*";
-            public static String Sngine_ONESIGNAL_APP_ID = "00000000-0000-0000-0000-000000000000";
+            public static int ASWR_DAYS = 3;
+            public static int ASWR_TIMES = 10;
+            public static int ASWR_INTERVAL = 2;
         }
         EOF
 
