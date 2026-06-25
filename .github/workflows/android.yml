@@ -1,4 +1,4 @@
-name: Build Android APK Final
+name: Build Android APK Final Fix
 
 on:
   push:
@@ -24,28 +24,30 @@ jobs:
       with:
         gradle-version: 8.5
 
-    - name: Build Android Structure Inside Folder
+    - name: Build Android Structure Clean
       run: |
-        # مکمل اینڈرائیڈ اسٹرکچر ایک ہی فولڈر کے اندر بنانا
-        mkdir -p android-app/app/src/main/java/com/janimrankhan/statull
-        mkdir -p android-app/app/src/main/assets
+        # پرانے کسی بھی فولڈر کا نام ختم کر کے نیا برانڈ نیو فولڈر بنانا
+        rm -rf final-android-app
+        mkdir -p final-android-app/app/src/main/java/com/janimrankhan/statull
+        mkdir -p final-android-app/app/src/main/assets
 
-        # آپ کی ویب سائٹ کی فائلیں کاپی کرنا
-        find . -maxdepth 1 ! -name 'android-app' ! -name '.github' ! -name '.git' ! -name '.' ! -name '..' -exec cp -r {} android-app/app/src/main/assets/ \; 2>/dev/null || true
+        # آپ کی ویب سائٹ کی فائلیں کاپی کرنا (پرانے فولڈرز کو چھوڑ کر)
+        find . -maxdepth 1 ! -name 'final-android-app' ! -name 'android-app' ! -name '.github' ! -name '.git' ! -name '.' ! -name '..' -exec cp -r {} final-android-app/app/src/main/assets/ \; 2>/dev/null || true
 
         # انڈیکس فائل مینیج کرنا
-        if [ ! -f android-app/app/src/main/assets/index.html ]; then
-          find . -name "index.html" -exec cp {} android-app/app/src/main/assets/ \; 2>/dev/null || true
+        if [ ! -f final-android-app/app/src/main/assets/index.html ]; then
+          find . -name "index.html" -exec cp {} final-android-app/app/src/main/assets/ \; 2>/dev/null || true
         fi
 
         # اینڈرائیڈ کی کنفیگریشن فائلیں بنانا
-        echo "include ':app'" > android-app/settings.gradle
+        echo "include ':app'" > final-android-app/settings.gradle
         
-        # اینڈرائیڈ ایکس (AndroidX) کو لازمی آن کرنا (اسی کا ایرر آ رہا تھا)
-        echo "android.useAndroidX=true" > android-app/gradle.properties
+        # اینڈرائیڈ ایکس (AndroidX) کو زبردستی آن کرنا
+        echo "android.useAndroidX=true" > final-android-app/gradle.properties
+        echo "android.enableJetifier=true" >> final-android-app/gradle.properties
 
         # مین بلڈ فائل
-        cat << 'EOF' > android-app/build.gradle
+        cat << 'EOF' > final-android-app/build.gradle
         buildscript {
             repositories { google(); mavenCentral() }
             dependencies { classpath 'com.android.tools.build:gradle:8.2.2' }
@@ -54,7 +56,7 @@ jobs:
         EOF
 
         # ایپ بلڈ فائل
-        cat << 'EOF' > android-app/app/build.gradle
+        cat << 'EOF' > final-android-app/app/build.gradle
         plugins { id 'com.android.application' }
         android {
             namespace 'com.janimrankhan.statull'
@@ -73,7 +75,7 @@ jobs:
         EOF
 
         # مینی فیسٹ فائل
-        cat << 'EOF' > android-app/app/src/main/AndroidManifest.xml
+        cat << 'EOF' > final-android-app/app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://android.com" package="com.janimrankhan.statull">
             <uses-permission android:name="android.permission.INTERNET" />
@@ -89,7 +91,7 @@ jobs:
         EOF
 
         # جاوا مین ایکٹیویٹی فائل
-        cat << 'EOF' > android-app/app/src/main/java/com/janimrankhan/statull/MainActivity.java
+        cat << 'EOF' > final-android-app/app/src/main/java/com/janimrankhan/statull/MainActivity.java
         package com.janimrankhan.statull;
         import android.os.Bundle;
         import android.webkit.WebView;
@@ -111,13 +113,13 @@ jobs:
 
     - name: Generate Wrapper and Build APK File
       run: |
-        cd android-app
+        cd final-android-app
         gradle wrapper
         chmod +x gradlew
-        ./gradlew assembleDebug --stacktrace
+        ./gradlew assembleDebug --stacktrace --no-build-cache
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
         name: Statull-App-APK
-        path: android-app/app/build/outputs/apk/debug/app-debug.apk
+        path: final-android-app/app/build/outputs/apk/debug/app-debug.apk
