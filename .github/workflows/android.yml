@@ -19,21 +19,22 @@ jobs:
         java-version: '17'
         distribution: 'zulu'
 
+    - name: Set Environment Variables
+      run: |
+        echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true" >> $GITHUB_ENV
+        echo "ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true" >> $GITHUB_ENV
+
     - name: Create Android Native Project Structure
       run: |
-        # اینڈرائیڈ پروجیکٹ کے بنیادی فولڈرز بنانا
         mkdir -p android-app/app/src/main/java/com/janimrankhan/statull
         mkdir -p android-app/app/src/main/assets
         mkdir -p android-app/gradle/wrapper
 
-        # آپ کی ویب سائٹ کی تمام فائلوں کو اینڈرائیڈ کے اثاثوں (Assets) میں کاپی کرنا
         cp -r * android-app/app/src/main/assets/ || true
-        rm -rf android-app/app/src/main/assets/android-app # لوپ سے بچنے کے لیے
+        rm -rf android-app/app/src/main/assets/android-app
 
-        # settings.gradle بنانا
         echo "include ':app'" > android-app/settings.gradle
 
-        # روٹ build.gradle بنانا
         cat << 'EOF' > android-app/build.gradle
         buildscript {
             repositories { google(); mavenCentral() }
@@ -42,7 +43,6 @@ jobs:
         allprojects { repositories { google(); mavenCentral() } }
         EOF
 
-        # ایپ build.gradle بنانا
         cat << 'EOF' > android-app/app/build.gradle
         plugins { id 'com.android.application' }
         android {
@@ -61,7 +61,6 @@ jobs:
         }
         EOF
 
-        # AndroidManifest.xml بنانا (انٹرنیٹ کی اجازت کے ساتھ)
         cat << 'EOF' > android-app/app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://android.com" package="com.janimrankhan.statull">
@@ -77,7 +76,6 @@ jobs:
         </manifest>
         EOF
 
-        # MainActivity.java بنانا جو آپ کی ویب سائٹ کی index.html کو لوڈ کرے گی
         cat << 'EOF' > android-app/app/src/main/java/com/janimrankhan/statull/MainActivity.java
         package com.janimrankhan.statull;
         import android.os.Bundle;
@@ -92,14 +90,13 @@ jobs:
                 webView.getSettings().setJavaScriptEnabled(true);
                 webView.getSettings().setDomStorageEnabled(true);
                 webView.setWebViewClient(new WebViewClient());
-                // یہ لائن لوکل اپلوڈ شدہ ویب سائٹ فائل کو لوڈ کرے گی
                 webView.loadUrl("file:///android_asset/index.html");
                 setContentView(webView);
             }
         }
         EOF
 
-    - name: Install Gradle Wrapper
+    - name: Download Wrapper
       run: |
         cd android-app
         gradle wrapper --gradle-version 8.5
