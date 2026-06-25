@@ -31,7 +31,6 @@ jobs:
         mkdir -p app/src/main/assets
 
         # ویب فائلوں کو اثاثوں (Assets) میں منتقل کرنا
-        # ان فائلوں کو چھوڑ کر جو اینڈرائیڈ کی اپنی ہیں
         find . -maxdepth 1 ! -name 'app' ! -name '.github' ! -name '.git' ! -name '.' ! -name '..' -exec cp -r {} app/src/main/assets/ \; 2>/dev/null || true
 
         # انڈیکس فائل کی موجودگی یقینی بنانا
@@ -41,6 +40,9 @@ jobs:
 
         # سیٹنگز فائل بنانا
         echo "include ':app'" > settings.gradle
+
+        # اہم ترین پراپرٹیز فائل بنانا (جس کا ایرر آ رہا تھا)
+        echo "android.useAndroidX=true" > gradle.properties
 
         # مین بلڈ فائل بنانا
         cat << 'EOF' > build.gradle
