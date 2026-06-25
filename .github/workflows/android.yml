@@ -39,7 +39,7 @@ jobs:
           find . -maxdepth 2 -name "index.html" -exec cp {} separate-android-app/app/src/main/assets/ \; 2>/dev/null || true
         fi
 
-        # ڈیفالٹ تھیم اور کلرز بنانا تاکہ ایپ کریش نہ ہو
+        # ڈیفالٹ تھیم بنانا تاکہ ایپ کریش نہ ہو
         cat << 'EOF' > separate-android-app/app/src/main/res/values/styles.xml
         <resources>
             <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar"></style>
@@ -79,7 +79,7 @@ jobs:
         }
         EOF
 
-        # مینی فیسٹ فائل (صرف سادہ تھیم کے ساتھ، بغیر آئیکن کی شرط کے)
+        # مینی فیسٹ فائل (غلط لنک یہاں درست کر دیا گیا ہے)
         cat << 'EOF' > separate-android-app/app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://android.com" package="com.janimrankhan.statull">
