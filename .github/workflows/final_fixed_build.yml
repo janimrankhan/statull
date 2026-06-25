@@ -43,11 +43,7 @@ jobs:
         fi
 
         # ڈیفالٹ تھیم فائل بنانا
-        cat << 'EOF' > fresh-app/app/src/main/res/values/styles.xml
-        <resources>
-            <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar"></style>
-        </resources>
-        EOF
+        echo '<resources><style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar"></style></resources>' > fresh-app/app/src/main/res/values/styles.xml
 
         # اینڈرائیڈ ایکس سیٹنگز بنانا اور ورژن 35 کی وارننگ سپریس کرنا
         echo "include ':app'" > fresh-app/settings.gradle
@@ -56,72 +52,16 @@ jobs:
         echo "android.suppressUnsupportedCompileSdk=35" >> fresh-app/gradle.properties
 
         # کلاؤڈ روٹ بلڈ فائل
-        cat << 'EOF' > fresh-app/build.gradle
-        buildscript {
-            repositories { google(); mavenCentral() }
-            dependencies { classpath 'com.android.tools.build:gradle:8.2.2' }
-        }
-        allprojects { repositories { google(); mavenCentral() } }
-        EOF
+        echo "buildscript { repositories { google(); mavenCentral() }; dependencies { classpath 'com.android.tools.build:gradle:8.2.2' } }; allprojects { repositories { google(); mavenCentral() } }" > fresh-app/build.gradle
 
-        # ایپ بلڈ فائل
-        cat << 'EOF' > fresh-app/app/build.gradle
-        plugins { id 'com.android.application' }
-        android {
-            namespace 'statull.app.webview'
-            compileSdk 35
-            defaultConfig {
-                applicationId 'statull.app.webview'
-                minSdk 27
-                targetSdk 35
-                versionCode 16
-                versionName 'v4.4'
-            }
-        }
-        dependencies {
-            implementation 'androidx.appcompat:appcompat:1.7.1'
-            implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-            implementation 'com.google.android.gms:play-services-auth:21.6.0'
-            implementation 'com.google.android.gms:play-services-location:21.3.0'
-        }
-        EOF
+        # ایپ بلڈ فائل بنانا
+        echo "plugins { id 'com.android.application' }; android { namespace 'statull.app.webview'; compileSdk 35; defaultConfig { applicationId 'statull.app.webview'; minSdk 27; targetSdk 35; versionCode 16; versionName 'v4.4' } }; dependencies { implementation 'androidx.appcompat:appcompat:1.7.1'; implementation 'androidx.legacy:legacy-support-v4:1.0.0'; implementation 'com.google.android.gms:play-services-auth:21.6.0'; implementation 'com.google.android.gms:play-services-location:21.3.0' }" > fresh-app/app/build.gradle
 
-        # مینی فیسٹ فائل (ٹیگز اور ناموں کو یہاں مکمل درست کر دیا گیا ہے)
-        cat << 'EOF' > fresh-app/app/src/main/AndroidManifest.xml
-        <?xml version="1.0" encoding="utf-8"?>
-        <manifest xmlns:android="http://android.com">
-            <uses-permission android:name="android.permission.INTERNET" />
-            <application android:theme="@style/AppTheme" android:label="Statull" android:allowBackup="true">
-                <activity android:name="statull.app.webview.MainActivity" android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.MAIN" />
-                        <category android:name="android.intent.category.LAUNCHER" />
-                    </intent-filter>
-                </activity>
-            </application>
-        </manifest>
-        EOF
+        # مینی فیسٹ فائل (محفوظ ترین بائنری طریقہ تاکہ کوئی لفظ غائب نہ ہو)
+        echo "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPG1hbmlmZXN0IHhtbG5zOmFuZHJvaWQ9Imh0dHA6Ly9zY2hlbWFzLmFuZHJvaWQuY29tL2Fway9yZXMvYW5kcm9pZCI+CiAgICA8dXNlcy1wZXJtaXNzaW9uIGFuZHJvaWQ6bmFtZT0iYW5kcm9pZC5wZXJtaXNzaW9uLklOVEVSTkVUIiAvPgogICAgPGFwcGxpY2F0aW9uIGFuZHJvaWQ6dGhlbWU9IkBzdHlsZS9BcHBUaGVtZSIgYW5kcm9pZDpsYWJlbD0iU3RhdHVsbCIgYW5kcm9pZDphbGxvd0JhY2t1PSJ0cnVlIj4KICAgICAgICA8YWN0aXZpdHkgYW5kcm9pZDpuYW1lPSJzdGF0dWxsLmFwcC53ZWJ2aWV3Lk1haW5BY3Rpdml0eSIgYW5kcm9pZDpleHBvcnRlZD0idHJ1ZSI+CiAgICAgICAgICAgIDxpbnRlbnQtZmlsdGVyPgogICAgICAgICAgICAgICAgPGFjdGlvbiBhbmRyb2lkOm5hbWU9ImFuZHJvaWQuaW50ZW50LmFjdGlvbi5NQUlOIiAvPgogICAgICAgICAgICAgICAgPGNhdGVnb3J5IGFuZHJvaWQ6bmFtZT0iYW5kcm9pZC5pbnRlbnQuY2F0ZWdvcnkuTEFVTkNIRVIiBgogICAgICAgICAgICA8L2ludGVudC1maWx0ZXI+CiAgICAgICAgPC9hY3Rpdml0eT4KICAgIDwvYXBwbGلاNhdGlvbj4KPC9tYW5pZmVzdD4=" | base64 -d > fresh-app/app/src/main/AndroidManifest.xml
 
-        # درست پیکیج راستے کے ساتھ جاوا مین فائل
-        cat << 'EOF' > fresh-app/app/src/main/java/statull/app/webview/MainActivity.java
-        package statull.app.webview;
-        import android.os.Bundle;
-        import android.webkit.WebView;
-        import android.webkit.WebViewClient;
-        import androidx.appcompat.app.AppCompatActivity;
-        public class MainActivity extends AppCompatActivity {
-            @Override
-            protected void onCreate(Bundle savedInstanceState) {
-                super.onCreate(savedInstanceState);
-                WebView webView = new WebView(this);
-                webView.getSettings().setJavaScriptEnabled(true);
-                webView.getSettings().setDomStorageEnabled(true);
-                webView.setWebViewClient(new WebViewClient());
-                webView.loadUrl("file:///android_asset/index.html");
-                setContentView(webView);
-            }
-        }
-        EOF
+        # جاوا فائل بنانا
+        echo "cGFja2FnZSBzdGF0dWxsLmFwcC53ZWJ2aWV3OwppbXBvcnQgYW5kcm9pZC5vcy5CdW5kbGU7CmltcG9ydCBhbmRyb2lkLndlYmtpdC5XZWJWaWV3OwppbXBvcnQgYW5kcm9pZC53ZWJraXQuV2ViVmlld0NsaWVudDsKaW1wb3J0IGFuZHJvaWR4LmFwcGNvbXBhdC5hcHAuQXBwQ29tcGF0QWN0aXZpdHk7CnB1YmxpYyBjbGFzcyBNYWluQWN0aXZpdHkgZXh0ZW5kcyBBcHBDb21wYXRDYXRpdml0eSB7CiAgICBAT3ZlcnJpZGUKICAgIHByb3RlY3RlZCB2b2lkIG9uQ3JlYXRlKEJ1bmRsZSBzYXZlZEluc3RhbmNlKSB7CiAgICAgICAgc3VwZXIub25DcmVhdGUoc2F2ZWRJbnN0YW5jZSk7CiAgICAgICAgV2ViVmlldyB3ZWJWaWV3ID0gbmV3IFdlYlZpZXcodGhpcyk7CiAgICAgICAgd2ViVmlldy5nZXRTZXR0aW5ncygpLnNldEphdmFTY3JpcHRFbmFibGVkKHRydWUpOwogICAgICAgIHdlYlZpZXcuZ2V0U2V0dGluZ3MoKS5zZXREb21TdG9yYWdlRW5hYmxlZCh0cnVlKTsKICAgICAgICB3ZWJWaWV3LnNldFdlYlZpZXdDbGllbnQobmV3IFdlYlZpZXdDbGllbnQoKSk7CiAgICAgICAgd2ViVmlldy5sb2FkVXJsKCJmaWxlOi8vL2FuZHJvaWRfYXNzZXQvaW5kZXguaHRtbCIpOwogICAgICAgIHNldENvbnRlbnRWaWV3KHdlYlZpZXcpOwogICAgfQp9" | base64 -d > fresh-app/app/src/main/java/statull/app/webview/MainActivity.java
 
     - name: Pure Build Without Cache
       run: |
