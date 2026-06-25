@@ -26,13 +26,12 @@ jobs:
 
     - name: Build Android Structure Clean
       run: |
-        # پرانے کسی بھی فولڈر سے الگ ایک نیا فولڈر بنانا
         rm -rf separate-android-app
         mkdir -p separate-android-app/app/src/main/java/com/janimrankhan/statull
         mkdir -p separate-android-app/app/src/main/assets
+        mkdir -p separate-android-app/app/src/main/res/values
 
-        # صرف ویب سائٹ کی فائلیں (HTML, CSS, JS) نئے فولڈر کے اثاثوں میں کاپی کرنا
-        # اینڈرائیڈ کی پرانی فائلوں اور فولڈرز کو نظر انداز (Exclude) کرنا
+        # ویب سائٹ کی فائلیں کاپی کرنا
         find . -maxdepth 1 ! -name 'separate-android-app' ! -name 'app' ! -name 'gradle' ! -name '.github' ! -name '.git' ! -name 'build.gradle' ! -name 'gradle.properties' ! -name 'settings.gradle' ! -name 'gradlew' ! -name 'gradlew.bat' ! -name '.' ! -name '..' -exec cp -r {} separate-android-app/app/src/main/assets/ \; 2>/dev/null || true
 
         # انڈیکس فائل مینیج کرنا
@@ -40,12 +39,19 @@ jobs:
           find . -maxdepth 2 -name "index.html" -exec cp {} separate-android-app/app/src/main/assets/ \; 2>/dev/null || true
         fi
 
-        # نئی صاف ستھری کنفیگریشن فائلیں بنانا
+        # ڈیفالٹ تھیم اور کلرز بنانا تاکہ ایپ کریش نہ ہو
+        cat << 'EOF' > separate-android-app/app/src/main/res/values/styles.xml
+        <resources>
+            <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar"></style>
+        </resources>
+        EOF
+
+        # کنفیگریشن فائلیں بنانا
         echo "include ':app'" > separate-android-app/settings.gradle
         echo "android.useAndroidX=true" > separate-android-app/gradle.properties
         echo "android.enableJetifier=true" >> separate-android-app/gradle.properties
 
-        # نئی مین بلڈ فائل
+        # مین بلڈ فائل
         cat << 'EOF' > separate-android-app/build.gradle
         buildscript {
             repositories { google(); mavenCentral() }
@@ -54,7 +60,7 @@ jobs:
         allprojects { repositories { google(); mavenCentral() } }
         EOF
 
-        # نئی ایپ بلڈ فائل
+        # ایپ بلڈ فائل
         cat << 'EOF' > separate-android-app/app/build.gradle
         plugins { id 'com.android.application' }
         android {
@@ -73,12 +79,12 @@ jobs:
         }
         EOF
 
-        # نئی مینی فیسٹ فائل
+        # مینی فیسٹ فائل (صرف سادہ تھیم کے ساتھ، بغیر آئیکن کی شرط کے)
         cat << 'EOF' > separate-android-app/app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://android.com" package="com.janimrankhan.statull">
             <uses-permission android:name="android.permission.INTERNET" />
-            <application android:theme="@style/Theme.AppCompat.Light.NoActionBar" android:label="Statull" android:allowBackup="true">
+            <application android:theme="@style/AppTheme" android:label="Statull" android:allowBackup="true">
                 <activity android:name=".MainActivity" android:exported="true">
                     <intent-filter>
                         <action android:name="android.intent.action.MAIN" />
@@ -89,7 +95,7 @@ jobs:
         </manifest>
         EOF
 
-        # نئی جاوا فائل
+        # جاوا فائل
         cat << 'EOF' > separate-android-app/app/src/main/java/com/janimrankhan/statull/MainActivity.java
         package com.janimrankhan.statull;
         import android.os.Bundle;
