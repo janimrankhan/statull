@@ -5,6 +5,9 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,17 +22,13 @@ jobs:
         java-version: '17'
         distribution: 'zulu'
 
-    - name: Set Environment Variables
-      run: |
-        echo "FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true" >> $GITHUB_ENV
-        echo "ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true" >> $GITHUB_ENV
-
     - name: Create Android Native Project Structure
       run: |
         mkdir -p android-app/app/src/main/java/com/janimrankhan/statull
         mkdir -p android-app/app/src/main/assets
         mkdir -p android-app/gradle/wrapper
 
+        # آپ کی ویب سائٹ کی فائلوں کو کاپی کرنا
         cp -r * android-app/app/src/main/assets/ || true
         rm -rf android-app/app/src/main/assets/android-app
 
@@ -65,7 +64,7 @@ jobs:
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://android.com" package="com.janimrankhan.statull">
             <uses-permission android:name="android.permission.INTERNET" />
-            <application android:theme="@style/Theme.AppCompat.Light.NoActionBar" android:label="Statull">
+            <application android:theme="@style/Theme.AppCompat.Light.NoActionBar" android:label="Statull" android:allowBackup="true">
                 <activity android:name=".MainActivity" android:exported="true">
                     <intent-filter>
                         <action android:name="android.intent.action.MAIN" />
