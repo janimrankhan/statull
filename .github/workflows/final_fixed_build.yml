@@ -62,7 +62,7 @@ jobs:
         allprojects { repositories { google(); mavenCentral() } }
         EOF
 
-        # آپ کی لوکل فائل کے مطابق کلاؤڈ ایپ بلڈ فائل بنانا ( compileSdk 35 کے ساتھ)
+        # آپ کی لوکل فائل کے مطابق کلاؤڈ ایپ بلڈ فائل بنانا (compileSdk 35 کے ساتھ)
         cat << 'EOF' > fresh-app/app/build.gradle
         plugins { id 'com.android.application' }
         android {
@@ -81,7 +81,6 @@ jobs:
             implementation 'androidx.legacy:legacy-support-v4:1.0.0'
             implementation 'com.google.android.gms:play-services-auth:21.6.0'
             implementation 'com.google.android.gms:play-services-location:21.3.0'
-            implementation 'com.onesignal:OneSignal:'
         }
         EOF
 
@@ -130,7 +129,7 @@ jobs:
         ./gradlew assembleDebug --no-build-cache
 
     - name: Upload Finished APK
-      uses: actions/with-artifact@v4
+      uses: actions/upload-artifact@v4
       with:
         name: Statull-App-APK
         path: fresh-app/app/build/outputs/apk/debug/app-debug.apk
