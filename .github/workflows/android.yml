@@ -24,19 +24,16 @@ jobs:
       with:
         gradle-version: 8.5
 
-    - name: Create Web App Structure
+    - name: Create Web App Structure Clean
       run: |
         mkdir -p android-app/app/src/main/java/com/janimrankhan/statull
         mkdir -p android-app/app/src/main/assets
 
-        # آپ کی ویب سائٹ کی تمام فائلیں اثاثوں (Assets) میں کاپی کرنا
-        cp -r * android-app/app/src/main/assets/ || true
-        rm -rf android-app/app/src/main/assets/android-app
+        # صرف ویب سائٹ سے متعلقہ فائلیں کاپی کرنا (تاکہ لوپ اور ایرر نہ بنے)
+        find . -maxdepth 1 ! -name 'android-app' ! -name '.github' ! -name '.' ! -name '..' -exec cp -r {} android-app/app/src/main/assets/ \;
 
-        # settings.gradle بنانا
         echo "include ':app'" > android-app/settings.gradle
 
-        # روٹ build.gradle بنانا
         cat << 'EOF' > android-app/build.gradle
         buildscript {
             repositories { google(); mavenCentral() }
@@ -45,7 +42,6 @@ jobs:
         allprojects { repositories { google(); mavenCentral() } }
         EOF
 
-        # ایپ کا build.gradle بنانا
         cat << 'EOF' > android-app/app/build.gradle
         plugins { id 'com.android.application' }
         android {
@@ -58,13 +54,17 @@ jobs:
                 versionCode 1
                 versionName "1.0"
             }
+            buildTypes {
+                release {
+                    minifyEnabled false
+                }
+            }
         }
         dependencies {
             implementation 'androidx.appcompat:appcompat:1.6.1'
         }
         EOF
 
-        # AndroidManifest.xml فائل بنانا
         cat << 'EOF' > android-app/app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://android.com" package="com.janimrankhan.statull">
@@ -80,7 +80,6 @@ jobs:
         </manifest>
         EOF
 
-        # MainActivity.java فائل بنانا
         cat << 'EOF' > android-app/app/src/main/java/com/janimrankhan/statull/MainActivity.java
         package com.janimrankhan.statull;
         import android.os.Bundle;
