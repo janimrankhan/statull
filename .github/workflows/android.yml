@@ -26,28 +26,27 @@ jobs:
 
     - name: Build Android Structure Clean
       run: |
-        # پرانے کسی بھی فولڈر کا نام ختم کر کے نیا برانڈ نیو فولڈر بنانا
-        rm -rf final-android-app
-        mkdir -p final-android-app/app/src/main/java/com/janimrankhan/statull
-        mkdir -p final-android-app/app/src/main/assets
+        # پرانے کسی بھی فولڈر سے الگ ایک نیا فولڈر بنانا
+        rm -rf separate-android-app
+        mkdir -p separate-android-app/app/src/main/java/com/janimrankhan/statull
+        mkdir -p separate-android-app/app/src/main/assets
 
-        # آپ کی ویب سائٹ کی فائلیں کاپی کرنا (پرانے فولڈرز کو چھوڑ کر)
-        find . -maxdepth 1 ! -name 'final-android-app' ! -name 'android-app' ! -name '.github' ! -name '.git' ! -name '.' ! -name '..' -exec cp -r {} final-android-app/app/src/main/assets/ \; 2>/dev/null || true
+        # صرف ویب سائٹ کی فائلیں (HTML, CSS, JS) نئے فولڈر کے اثاثوں میں کاپی کرنا
+        # اینڈرائیڈ کی پرانی فائلوں اور فولڈرز کو نظر انداز (Exclude) کرنا
+        find . -maxdepth 1 ! -name 'separate-android-app' ! -name 'app' ! -name 'gradle' ! -name '.github' ! -name '.git' ! -name 'build.gradle' ! -name 'gradle.properties' ! -name 'settings.gradle' ! -name 'gradlew' ! -name 'gradlew.bat' ! -name '.' ! -name '..' -exec cp -r {} separate-android-app/app/src/main/assets/ \; 2>/dev/null || true
 
         # انڈیکس فائل مینیج کرنا
-        if [ ! -f final-android-app/app/src/main/assets/index.html ]; then
-          find . -name "index.html" -exec cp {} final-android-app/app/src/main/assets/ \; 2>/dev/null || true
+        if [ ! -f separate-android-app/app/src/main/assets/index.html ]; then
+          find . -maxdepth 2 -name "index.html" -exec cp {} separate-android-app/app/src/main/assets/ \; 2>/dev/null || true
         fi
 
-        # اینڈرائیڈ کی کنفیگریشن فائلیں بنانا
-        echo "include ':app'" > final-android-app/settings.gradle
-        
-        # اینڈرائیڈ ایکس (AndroidX) کو زبردستی آن کرنا
-        echo "android.useAndroidX=true" > final-android-app/gradle.properties
-        echo "android.enableJetifier=true" >> final-android-app/gradle.properties
+        # نئی صاف ستھری کنفیگریشن فائلیں بنانا
+        echo "include ':app'" > separate-android-app/settings.gradle
+        echo "android.useAndroidX=true" > separate-android-app/gradle.properties
+        echo "android.enableJetifier=true" >> separate-android-app/gradle.properties
 
-        # مین بلڈ فائل
-        cat << 'EOF' > final-android-app/build.gradle
+        # نئی مین بلڈ فائل
+        cat << 'EOF' > separate-android-app/build.gradle
         buildscript {
             repositories { google(); mavenCentral() }
             dependencies { classpath 'com.android.tools.build:gradle:8.2.2' }
@@ -55,8 +54,8 @@ jobs:
         allprojects { repositories { google(); mavenCentral() } }
         EOF
 
-        # ایپ بلڈ فائل
-        cat << 'EOF' > final-android-app/app/build.gradle
+        # نئی ایپ بلڈ فائل
+        cat << 'EOF' > separate-android-app/app/build.gradle
         plugins { id 'com.android.application' }
         android {
             namespace 'com.janimrankhan.statull'
@@ -74,8 +73,8 @@ jobs:
         }
         EOF
 
-        # مینی فیسٹ فائل
-        cat << 'EOF' > final-android-app/app/src/main/AndroidManifest.xml
+        # نئی مینی فیسٹ فائل
+        cat << 'EOF' > separate-android-app/app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://android.com" package="com.janimrankhan.statull">
             <uses-permission android:name="android.permission.INTERNET" />
@@ -90,8 +89,8 @@ jobs:
         </manifest>
         EOF
 
-        # جاوا مین ایکٹیویٹی فائل
-        cat << 'EOF' > final-android-app/app/src/main/java/com/janimrankhan/statull/MainActivity.java
+        # نئی جاوا فائل
+        cat << 'EOF' > separate-android-app/app/src/main/java/com/janimrankhan/statull/MainActivity.java
         package com.janimrankhan.statull;
         import android.os.Bundle;
         import android.webkit.WebView;
@@ -111,9 +110,9 @@ jobs:
         }
         EOF
 
-    - name: Generate Wrapper and Build APK File
+    - name: Generate Wrapper and Build APK File Clean
       run: |
-        cd final-android-app
+        cd separate-android-app
         gradle wrapper
         chmod +x gradlew
         ./gradlew assembleDebug --stacktrace --no-build-cache
@@ -122,4 +121,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Statull-App-APK
-        path: final-android-app/app/build/outputs/apk/debug/app-debug.apk
+        path: separate-android-app/app/build/outputs/apk/debug/app-debug.apk
