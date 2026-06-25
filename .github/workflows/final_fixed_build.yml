@@ -22,18 +22,17 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        gradle-version: 8.5
+        gradle-version: 8.2 # آپ کے پروجیکٹ کی فائلوں کے مطابق ورژن سیٹ کر دیا گیا ہے
 
     - name: Configure Android Project Settings
       run: |
-        # اینڈرائیڈ ایکس پراپرٹیز کی موجودگی یقینی بنانا
         echo "android.useAndroidX=true" > gradle.properties
         echo "android.enableJetifier=true" >> gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
 
     - name: Build APK Directly from Project
       run: |
-        gradle wrapper
+        gradle wrapper --gradle-version 8.2
         chmod +x gradlew
         ./gradlew assembleDebug --no-build-cache --stacktrace
 
