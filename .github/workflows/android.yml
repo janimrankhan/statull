@@ -19,11 +19,16 @@ jobs:
         java-version: '17'
         distribution: 'zulu'
 
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: 8.5
+
     - name: Create Web App Structure
       run: |
         mkdir -p android-app/app/src/main/java/com/janimrankhan/statull
         mkdir -p android-app/app/src/main/assets
-        
+
         # آپ کی ویب سائٹ کی تمام فائلیں اثاثوں (Assets) میں کاپی کرنا
         cp -r * android-app/app/src/main/assets/ || true
         rm -rf android-app/app/src/main/assets/android-app
@@ -96,14 +101,10 @@ jobs:
         }
         EOF
 
-    - name: Set up Gradle Wrapper
+    - name: Generate Wrapper and Build
       run: |
         cd android-app
-        gradle wrapper --gradle-version 8.5
-
-    - name: Build Android APK
-      run: |
-        cd android-app
+        gradle wrapper
         chmod +x gradlew
         ./gradlew assembleDebug
 
