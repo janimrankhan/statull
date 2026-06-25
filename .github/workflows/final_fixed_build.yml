@@ -13,10 +13,10 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup Java JDK 21
+    - name: Setup Java JDK 17
       uses: actions/setup-java@v4
       with:
-        java-version: '21' # جاوا ورژن کو اپڈیٹ کر دیا گیا ہے تاکہ سرٹیفکیٹ ایرر نہ آئے
+        java-version: '17'
         distribution: 'zulu'
 
     - name: Setup Gradle
@@ -24,8 +24,18 @@ jobs:
       with:
         gradle-version: 8.5
 
-    - name: Configure Android Project Settings
+    - name: Force Downgrade Gradle Wrapper
       run: |
+        # آپ کی متصادم فائل کو اوور رائٹ کرنا تاکہ گریڈل 9.3 استعمال نہ ہو
+        mkdir -p gradle/wrapper
+        echo "#Forced by Cloud Fix" > gradle/wrapper/gradle-wrapper.properties
+        echo "distributionBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
+        echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+        echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
+        echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+        echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip" >> gradle/wrapper/gradle-wrapper.properties
+
+        # اینڈرائیڈ ایکس سیٹنگز بنانا
         echo "android.useAndroidX=true" > gradle.properties
         echo "android.enableJetifier=true" >> gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
