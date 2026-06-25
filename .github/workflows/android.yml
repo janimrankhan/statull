@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK Final
 
 on:
   push:
@@ -24,28 +24,28 @@ jobs:
       with:
         gradle-version: 8.5
 
-    - name: Inject Android Structure Directly
+    - name: Build Android Structure Inside Folder
       run: |
-        # اینڈرائیڈ کی ضروری فائلیں سیدھی مین فولڈر میں بنانا
-        mkdir -p app/src/main/java/com/janimrankhan/statull
-        mkdir -p app/src/main/assets
+        # مکمل اینڈرائیڈ اسٹرکچر ایک ہی فولڈر کے اندر بنانا
+        mkdir -p android-app/app/src/main/java/com/janimrankhan/statull
+        mkdir -p android-app/app/src/main/assets
 
-        # ویب فائلوں کو اثاثوں (Assets) میں منتقل کرنا
-        find . -maxdepth 1 ! -name 'app' ! -name '.github' ! -name '.git' ! -name '.' ! -name '..' -exec cp -r {} app/src/main/assets/ \; 2>/dev/null || true
+        # آپ کی ویب سائٹ کی فائلیں کاپی کرنا
+        find . -maxdepth 1 ! -name 'android-app' ! -name '.github' ! -name '.git' ! -name '.' ! -name '..' -exec cp -r {} android-app/app/src/main/assets/ \; 2>/dev/null || true
 
-        # انڈیکس فائل کی موجودگی یقینی بنانا
-        if [ ! -f app/src/main/assets/index.html ]; then
-          find . -name "index.html" -exec cp {} app/src/main/assets/ \; 2>/dev/null || true
+        # انڈیکس فائل مینیج کرنا
+        if [ ! -f android-app/app/src/main/assets/index.html ]; then
+          find . -name "index.html" -exec cp {} android-app/app/src/main/assets/ \; 2>/dev/null || true
         fi
 
-        # سیٹنگز فائل بنانا
-        echo "include ':app'" > settings.gradle
+        # اینڈرائیڈ کی کنفیگریشن فائلیں بنانا
+        echo "include ':app'" > android-app/settings.gradle
+        
+        # اینڈرائیڈ ایکس (AndroidX) کو لازمی آن کرنا (اسی کا ایرر آ رہا تھا)
+        echo "android.useAndroidX=true" > android-app/gradle.properties
 
-        # اہم ترین پراپرٹیز فائل بنانا (جس کا ایرر آ رہا تھا)
-        echo "android.useAndroidX=true" > gradle.properties
-
-        # مین بلڈ فائل بنانا
-        cat << 'EOF' > build.gradle
+        # مین بلڈ فائل
+        cat << 'EOF' > android-app/build.gradle
         buildscript {
             repositories { google(); mavenCentral() }
             dependencies { classpath 'com.android.tools.build:gradle:8.2.2' }
@@ -53,8 +53,8 @@ jobs:
         allprojects { repositories { google(); mavenCentral() } }
         EOF
 
-        # ایپ بلڈ فائل بنانا
-        cat << 'EOF' > app/build.gradle
+        # ایپ بلڈ فائل
+        cat << 'EOF' > android-app/app/build.gradle
         plugins { id 'com.android.application' }
         android {
             namespace 'com.janimrankhan.statull'
@@ -66,18 +66,14 @@ jobs:
                 versionCode 1
                 versionName "1.0"
             }
-            aaptOptions {
-                cruncherEnabled = false
-                useNewCruncher = false
-            }
         }
         dependencies {
             implementation 'androidx.appcompat:appcompat:1.6.1'
         }
         EOF
 
-        # مینی فیسٹ فائل بنانا
-        cat << 'EOF' > app/src/main/AndroidManifest.xml
+        # مینی فیسٹ فائل
+        cat << 'EOF' > android-app/app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://android.com" package="com.janimrankhan.statull">
             <uses-permission android:name="android.permission.INTERNET" />
@@ -92,8 +88,8 @@ jobs:
         </manifest>
         EOF
 
-        # جاوا فائل بنانا
-        cat << 'EOF' > app/src/main/java/com/janimrankhan/statull/MainActivity.java
+        # جاوا مین ایکٹیویٹی فائل
+        cat << 'EOF' > android-app/app/src/main/java/com/janimrankhan/statull/MainActivity.java
         package com.janimrankhan.statull;
         import android.os.Bundle;
         import android.webkit.WebView;
@@ -113,8 +109,9 @@ jobs:
         }
         EOF
 
-    - name: Generate Wrapper and Build APK
+    - name: Generate Wrapper and Build APK File
       run: |
+        cd android-app
         gradle wrapper
         chmod +x gradlew
         ./gradlew assembleDebug --stacktrace
@@ -123,4 +120,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Statull-App-APK
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: android-app/app/build/outputs/apk/debug/app-debug.apk
