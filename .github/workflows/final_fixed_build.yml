@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # گٹ ہب کی نوڈ وارننگ کو ختم کرنے کے لیے
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
@@ -16,10 +16,10 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup Java JDK 21
+    - name: Setup Java JDK 17
       uses: actions/setup-java@v4
       with:
-        java-version: '21' # AGP 9.1.1 کو بغیر کسی رکاوٹ کے رن کرنے کے لیے جاوا 21 لازمی ہے
+        java-version: '17'
         distribution: 'zulu'
 
     - name: Setup Gradle
@@ -29,10 +29,10 @@ jobs:
 
     - name: Configure Android Project Settings
       run: |
-        # اینڈرائیڈ رن ٹائم کی ضروری پراپرٹیز کو فورس کرنا
+        # جدید گریڈل 9.x کے قوانین کے مطابق جٹیفائر کو ہٹا کر سیٹنگز کرنا
         echo "android.useAndroidX=true" > gradle.properties
-        echo "android.enableJetifier=true" >> gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
+        echo "android.nonTransitiveRClass=true" >> gradle.properties
 
     - name: Build APK Directly from Project
       run: |
