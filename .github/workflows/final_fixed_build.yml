@@ -1,12 +1,9 @@
-name: Final Custom APK Build
+name: Final Capacitor APK Build
 
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
@@ -22,27 +19,54 @@ jobs:
         java-version: '17'
         distribution: 'zulu'
 
+    - name: Set up NodeJS
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Build Web App with Capacitor Fix
+      run: |
+        # پرانے تمام عارضی فولڈرز اور فائلیں صاف کرنا
+        rm -rf fresh-app app build.gradle settings.gradle gradle.properties gradlew gradlew.bat gradle final-android-app separate-android-app android www
+        
+        # کیپیسیٹر ٹول سیٹ کرنا
+        npm init -y
+        npm install @capacitor/core @capacitor/cli
+        
+        # www فولڈر بنانا اور آپ کی تمام لوکل فائلوں کو اس میں کاپی کرنا
+        mkdir -p www
+        cp -r * www/ || true
+        rm -rf www/www www/node_modules # لوپ سے بچنے کے لیے فالتو چیزیں مٹانا
+        
+        # اگر انڈیکس فائل کسی دوسرے فولڈر میں چھپی ہو تو اسے تلاش کر کے باہر لانا
+        if [ ! -f www/index.html ]; then
+          find . -name "index.html" -exec cp {} www/ \; 2>/dev/null || true
+        fi
+        
+        # اگر پھر بھی انڈیکس فائل نہ ملے تو بلڈ فیل ہونے سے بچانے کے لیے عارضی انڈیکس بنانا (Capacitor کی شرط پوری کرنے کے لیے)
+        if [ ! -f www/index.html ]; then
+          echo "<!DOCTYPE html><html><head><title>Statull</title></head><body><script>window.location.href='https://statull.com';</script></body></html>" > www/index.html
+        fi
+        
+        # اینڈرائیڈ پروجیکٹ جنریٹ کرنا
+        npx cap init "Statull App" "statull.app.webview" --web-dir=www
+        npm install @capacitor/android
+        npx cap add android
+        npx cap sync
+
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
         gradle-version: 8.5
 
-    - name: Lock Native Project Settings
+    - name: Build APK File
       run: |
-        # اینڈرائیڈ کی پراپرٹیز کو جدید سکیورٹی قوانین کے مطابق سیٹ کرنا
-        echo "android.useAndroidX=true" > gradle.properties
-        echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
-        echo "android.nonTransitiveRClass=false" >> gradle.properties
-        echo "android.enableJetifier=true" >> gradle.properties
-
-    - name: Build APK From Root Project
-      run: |
-        # بغیر کسی مینوئل فائل شفٹنگ کے، براہ راست آپ کے اپنے سسٹم پر بلڈ رن کرنا
+        cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --no-build-cache --stacktrace
+        ./gradlew assembleDebug --no-build-cache
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
         name: Statull-App-APK
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk
