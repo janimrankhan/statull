@@ -29,12 +29,12 @@ jobs:
 
     - name: Configure Android Project Settings
       run: |
-        # ریسورس میپنگ کو درست کرنے کے لیے پراپرٹیز سیٹ کرنا
+        # اینڈرائیڈ کی پراپرٹیز کو جدید ورژنز کے مطابق سیٹ کرنا
         echo "android.useAndroidX=true" > gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
         echo "android.nonTransitiveRClass=false" >> gradle.properties
 
-        # پرانی تمام متصادم فائلز کو صاف کر کے 100٪ پبلک کلاس اسٹرکچر کے ساتھ نئی فائل بنانا
+        # پرانی تمام متصادم SngineConfig فائلز کو صاف کر کے بلڈ فولڈر کے اندر بالکل درست پبلک سنٹیکس کے ساتھ دوبارہ بنانا
         rm -f app/src/main/java/statull/app/webview/SngineConfig.java
         mkdir -p app/src/main/java/statull/app/webview
         cat << 'EOF' > app/src/main/java/statull/app/webview/SngineConfig.java
@@ -64,9 +64,14 @@ jobs:
         }
         EOF
 
+        # 'package R does not exist' اور غائب شدہ امپورٹس کے مسائل کو مستقل فکس کرنے کے لیے فائلز کے ہیڈرز کو کلین کرنا
+        # ہم فائلز کی پہلی لائن (package) کے فوراً بعد درست امپورٹ اسٹیٹمنٹس زبردستی انپٹ کر رہے ہیں
+        sed -i '/package statull.app.webview;/a import statull.app.webview.R;\nimport statull.app.webview.SngineConfig;' app/src/main/java/statull/app/webview/MainActivity.java || true
+        sed -i '/package statull.app.webview;/a import statull.app.webview.R;\nimport statull.app.webview.SngineConfig;' app/src/main/java/statull/app/webview/DialogManager.java || true
+        sed -i '/package statull.app.webview;/a import statull.app.webview.R;\nimport statull.app.webview.SngineConfig;' app/src/main/java/statull/app/webview/SplashScreen.java || true
+
     - name: Build APK Directly from Project
       run: |
-        # گٹ ہب کیشے اور پرانے متصادم پارٹس کو صاف کر کے بلڈ رن کرنا
         chmod +x gradlew
         ./gradlew assembleDebug --no-build-cache --stacktrace
 
