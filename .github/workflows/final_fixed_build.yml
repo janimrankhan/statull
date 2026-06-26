@@ -29,10 +29,45 @@ jobs:
 
     - name: Configure Android Project Settings
       run: |
-        # اینڈرائیڈ رن ٹائم کی ضروری پراپرٹیز سیٹ کرنا
+        # R پیکیج کے غائب ہونے کے مسئلے کو حل کرنے کے لیے پراپرٹیز لاک کرنا
         echo "android.useAndroidX=true" > gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
         echo "android.nonTransitiveRClass=false" >> gradle.properties
+
+        # پرانی خراب SngineConfig فائل کو صاف کر کے بلڈ فولڈر کے اندر بالکل درست سنٹیکس کے ساتھ دوبارہ بنانا
+        rm -f app/src/main/java/statull/app/webview/SngineConfig.java
+        mkdir -p app/src/main/java/statull/app/webview
+        cat << 'EOF' > app/src/main/java/statull/app/webview/SngineConfig.java
+        package statull.app.webview;
+
+        public class SngineConfig {
+            public static String Sngine_URL = "https://statull.com";
+            public static String Sngine_ONESIGNAL_APP_ID = "";
+            public static boolean SngineApp_JSCRIPT = true;
+            public static boolean SngineApp_FUPLOAD = true;
+            public static boolean SngineApp_CAMUPLOAD = true;
+            public static boolean SngineApp_ONLYCAM = false;
+            public static boolean SngineApp_MULFILE = true;
+            public static boolean SngineApp_LOCATION = true;
+            public static boolean SngineApp_RATINGS = true;
+            public static boolean SngineApp_PULLFRESH = true;
+            public static boolean SngineApp_PBAR = true;
+            public static boolean SngineApp_ZOOM = false;
+            public static boolean SngineApp_SFORM = false;
+            public static boolean SngineApp_OFFLINE = false;
+            public static boolean SngineApp_EXTURL = false;
+            public static boolean SngineApp_CERT_VERIFICATION = true;
+            public static String Sngine_F_TYPE = "*/*";
+            public static int ASWR_DAYS = 3;
+            public static int ASWR_TIMES = 10;
+            public static int ASWR_INTERVAL = 2;
+        }
+        EOF
+
+        # 'package R does not exist' کا ایرر ہمیشہ کے لیے ختم کرنے کے لیے تمام جاوا فائلوں میں زبردستی R پیکیج امپورٹ کرنا
+        sed -i '2i import statull.app.webview.R;' app/src/main/java/statull/app/webview/MainActivity.java 2>/dev/null || true
+        sed -i '2i import statull.app.webview.R;' app/src/main/java/statull/app/webview/DialogManager.java 2>/dev/null || true
+        sed -i '2i import statull.app.webview.R;' app/src/main/java/statull/app/webview/SplashScreen.java 2>/dev/null || true
 
     - name: Build APK Directly from Project
       run: |
