@@ -16,21 +16,22 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup Java JDK 17
+    - name: Setup Java JDK 21
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
+        java-version: '21' # جاوا 21 سکیورٹی سرٹیفکیٹ اور گریڈل 9.3.1 دونوں کو بغیر ایرر سپورٹ کرتا ہے
         distribution: 'zulu'
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        gradle-version: 8.10 # یہاں درست اور موجودہ جدید گریڈل ورژن سیٹ کر دیا گیا ہے
+        gradle-version: 9.3.1 # آپ کی اپنی فائل کے عین مطابق ورژن لاک کر دیا گیا ہے
 
     - name: Configure Android Project Settings
       run: |
-        # گریڈل کے ورژنز کی مطابقت کے لیے پراپرٹیز کو اپڈیٹ کرنا
+        # اینڈرائیڈ کی پراپرٹیز کو جدید ورژنز کے مطابق سیٹ کرنا
         echo "android.useAndroidX=true" > gradle.properties
+        echo "android.enableJetifier=false" >> gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
         echo "android.nonTransitiveRClass=false" >> gradle.properties
 
@@ -40,7 +41,7 @@ jobs:
 
     - name: Build APK Directly from Project
       run: |
-        gradle wrapper --gradle-version 8.10
+        # بغیر کسی ڈاؤن گریڈ کمانڈ کے، براہ راست آپ کے اپنے سسٹم پر بلڈ رن کرنا
         chmod +x gradlew
         ./gradlew assembleDebug --no-build-cache --stacktrace
 
