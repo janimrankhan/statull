@@ -26,7 +26,7 @@ jobs:
 
     - name: Force Fix Android Versions and Code Imports
       run: |
-        # پروجیکٹ کو مستحکم گریڈل 8.5 اور AGP 8.2.2 پر لاک کرنا (ورژن کا مسئلہ حل کرنے کے لیے)
+        # پروجیکٹ کو مستحکم گریڈل 8.5 اور AGP 8.2.2 پر لاک کرنا
         echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
         echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
         echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
@@ -47,6 +47,12 @@ jobs:
         echo "android.enableJetifier=true" >> gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
         echo "android.nonTransitiveRClass=false" >> gradle.properties
+
+        # غائب شدہ سٹرنگ آئی ڈی (sngine_demo) کو strings.xml فائل کے اندر عارضی طور پر شامل کرنا تاکہ AAPT ایرر حل ہو جائے
+        STRINGS_FILE="app/src/main/res/values/strings.xml"
+        if [ -f "$STRINGS_FILE" ]; then
+          sed -i 's|</resources>|    <string name="sngine_demo">Statull</string>\n</resources>|g' "$STRINGS_FILE"
+        fi
 
         # جاوا فائلز میں غائب شدہ امپورٹس (R اور SngineConfig) کو پیکیج لائن کے فوراً بعد انجیکٹ کرنا
         for file in app/src/main/java/statull/app/webview/MainActivity.java app/src/main/java/statull/app/webview/DialogManager.java app/src/main/java/statull/app/webview/SplashScreen.java; do
