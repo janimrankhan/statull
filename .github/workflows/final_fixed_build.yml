@@ -1,9 +1,12 @@
-name: Final Capacitor APK Build
+name: Final Custom APK Build
 
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
@@ -19,46 +22,27 @@ jobs:
         java-version: '17'
         distribution: 'zulu'
 
-    - name: Set up NodeJS
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-
-    - name: Build Web App with Capacitor
-      run: |
-        # پرانے تمام خراب فولڈرز کلاؤڈ میموری سے صاف کرنا
-        rm -rf fresh-app app build.gradle settings.gradle gradle.properties gradlew gradlew.bat gradle final-android-app separate-android-app android
-        
-        # کیپیسیٹر ٹول انسٹال اور کنفیگر کرنا
-        npm init -y
-        npm install @capacitor/core @capacitor/cli
-        
-        # پروجیکٹ کی انڈیکس فائل مینیج کرنا
-        mkdir -p www
-        find . -maxdepth 1 ! -name 'www' ! -name '.github' ! -name '.git' ! -name '.' ! -name '..' -exec cp -r {} www/ \; 2>/dev/null || true
-        if [ ! -f www/index.html ]; then
-          find . -maxdepth 3 -name "index.html" -exec cp {} www/ \; 2>/dev/null || true
-        fi
-        
-        # اینڈرائیڈ پروجیکٹ جنریٹ کرنا
-        npx cap init "Statull App" "statull.app.webview" --web-dir=www
-        npm install @capacitor/android
-        npx cap add android
-        npx cap sync
-
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
         gradle-version: 8.5
 
-    - name: Build APK File
+    - name: Lock Native Project Settings
       run: |
-        cd android
+        # اینڈرائیڈ کی پراپرٹیز کو جدید سکیورٹی قوانین کے مطابق سیٹ کرنا
+        echo "android.useAndroidX=true" > gradle.properties
+        echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
+        echo "android.nonTransitiveRClass=false" >> gradle.properties
+        echo "android.enableJetifier=true" >> gradle.properties
+
+    - name: Build APK From Root Project
+      run: |
+        # بغیر کسی مینوئل فائل شفٹنگ کے، براہ راست آپ کے اپنے سسٹم پر بلڈ رن کرنا
         chmod +x gradlew
-        ./gradlew assembleDebug --no-build-cache
+        ./gradlew assembleDebug --no-build-cache --stacktrace
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
       with:
         name: Statull-App-APK
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+        path: app/build/outputs/apk/debug/app-debug.apk
