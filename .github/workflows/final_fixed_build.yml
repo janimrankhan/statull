@@ -25,51 +25,22 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        gradle-version: 9.1.1
+        gradle-version: 8.10 # یہاں درست اور موجودہ جدید گریڈل ورژن سیٹ کر دیا گیا ہے
 
     - name: Configure Android Project Settings
       run: |
-        # R پیکیج کے غائب ہونے کے مسئلے کو حل کرنے کے لیے غیر متغیر کلاسز کو آف کرنا
+        # گریڈل کے ورژنز کی مطابقت کے لیے پراپرٹیز کو اپڈیٹ کرنا
         echo "android.useAndroidX=true" > gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
         echo "android.nonTransitiveRClass=false" >> gradle.properties
 
-        # پرانی تمام خراب یا متصادم SngineConfig فائلز کو صاف کر کے 100٪ درست پیکیج کے ساتھ بنانا
-        rm -f app/src/main/java/statull/app/webview/SngineConfig.java
-        mkdir -p app/src/main/java/statull/app/webview
-        cat << 'EOF' > app/src/main/java/statull/app/webview/SngineConfig.java
-        package statull.app.webview;
-
-        public class SngineConfig {
-            public static String Sngine_URL = "https://statull.com";
-            public static String Sngine_ONESIGNAL_APP_ID = "";
-            public static boolean SngineApp_JSCRIPT = true;
-            public static boolean SngineApp_FUPLOAD = true;
-            public static boolean SngineApp_CAMUPLOAD = true;
-            public static boolean SngineApp_ONLYCAM = false;
-            public static boolean SngineApp_MULFILE = true;
-            public static boolean SngineApp_LOCATION = true;
-            public static boolean SngineApp_RATINGS = true;
-            public static boolean SngineApp_PULLFRESH = true;
-            public static boolean SngineApp_PBAR = true;
-            public static boolean SngineApp_ZOOM = false;
-            public static boolean SngineApp_SFORM = false;
-            public static boolean SngineApp_OFFLINE = false;
-            public static boolean SngineApp_EXTURL = false;
-            public static boolean SngineApp_CERT_VERIFICATION = true;
-            public static String Sngine_F_TYPE = "*/*";
-            public static int ASWR_DAYS = 3;
-            public static int ASWR_TIMES = 10;
-            public static int ASWR_INTERVAL = 2;
-        }
-        EOF
-
-        # جاوا فائلوں کے اندر زبردستی R پیکیج امپورٹ کرنا تاکہ 'package R does not exist' کا ایرر ہمیشہ کے لیے ختم ہو جائے
+        # جاوا فائلوں کے اندر زبردستی R پیکیج امپورٹ کرنا
         sed -i '2i import statull.app.webview.R;' app/src/main/java/statull/app/webview/MainActivity.java 2>/dev/null || true
         sed -i '2i import statull.app.webview.R;' app/src/main/java/statull/app/webview/DialogManager.java 2>/dev/null || true
 
     - name: Build APK Directly from Project
       run: |
+        gradle wrapper --gradle-version 8.10
         chmod +x gradlew
         ./gradlew assembleDebug --no-build-cache --stacktrace
 
