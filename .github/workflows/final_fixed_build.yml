@@ -29,12 +29,12 @@ jobs:
 
     - name: Configure Android Project Settings
       run: |
-        # R پیکیج کے غائب ہونے کے مسئلے کو حل کرنے کے لیے پراپرٹیز لاک کرنا
+        # ریسورس میپنگ کو درست کرنے کے لیے پراپرٹیز سیٹ کرنا
         echo "android.useAndroidX=true" > gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
         echo "android.nonTransitiveRClass=false" >> gradle.properties
 
-        # پرانی خراب SngineConfig فائل کو صاف کر کے بلڈ فولڈر کے اندر بالکل درست سنٹیکس کے ساتھ دوبارہ بنانا
+        # پرانی تمام متصادم فائلز کو صاف کر کے 100٪ پبلک کلاس اسٹرکچر کے ساتھ نئی فائل بنانا
         rm -f app/src/main/java/statull/app/webview/SngineConfig.java
         mkdir -p app/src/main/java/statull/app/webview
         cat << 'EOF' > app/src/main/java/statull/app/webview/SngineConfig.java
@@ -64,13 +64,9 @@ jobs:
         }
         EOF
 
-        # 'package R does not exist' کا ایرر ہمیشہ کے لیے ختم کرنے کے لیے تمام جاوا فائلوں میں زبردستی R پیکیج امپورٹ کرنا
-        sed -i '2i import statull.app.webview.R;' app/src/main/java/statull/app/webview/MainActivity.java 2>/dev/null || true
-        sed -i '2i import statull.app.webview.R;' app/src/main/java/statull/app/webview/DialogManager.java 2>/dev/null || true
-        sed -i '2i import statull.app.webview.R;' app/src/main/java/statull/app/webview/SplashScreen.java 2>/dev/null || true
-
     - name: Build APK Directly from Project
       run: |
+        # گٹ ہب کیشے اور پرانے متصادم پارٹس کو صاف کر کے بلڈ رن کرنا
         chmod +x gradlew
         ./gradlew assembleDebug --no-build-cache --stacktrace
 
