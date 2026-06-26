@@ -5,9 +5,6 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,52 +19,38 @@ jobs:
         java-version: '17'
         distribution: 'zulu'
 
-    - name: Setup Gradle
+    - name: Setup Gradle 8.5
       uses: gradle/actions/setup-gradle@v4
       with:
-        gradle-version: 9.3.1
+        gradle-version: 8.5
 
-    - name: Configure Android Project Settings and Overwrite Configs
+    - name: Force Fix Android Versions and Code Imports
       run: |
-        # ریسورس میپنگ کو درست کرنے کے لیے پراپرٹیز سیٹ کرنا
+        # پروجیکٹ کو مستحکم گریڈل 8.5 اور AGP 8.2.2 پر لاک کرنا (ورژن کا مسئلہ حل کرنے کے لیے)
+        echo "distributionBase=GRADLE_USER_HOME" > gradle/wrapper/gradle-wrapper.properties
+        echo "distributionPath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+        echo "zipStoreBase=GRADLE_USER_HOME" >> gradle/wrapper/gradle-wrapper.properties
+        echo "zipStorePath=wrapper/dists" >> gradle/wrapper/gradle-wrapper.properties
+        echo "distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip" >> gradle/wrapper/gradle-wrapper.properties
+
+        # روٹ build.gradle کو مستحکم ورژن 8.2.2 پر سیٹ کرنا
+        cat << 'EOF' > build.gradle
+        buildscript {
+            repositories { google(); mavenCentral() }
+            dependencies { classpath 'com.android.tools.build:gradle:8.2.2' }
+        }
+        allprojects { repositories { google(); mavenCentral() } }
+        EOF
+
+        # اینڈرائیڈ کی ضروری پراپرٹیز سیٹ کرنا
         echo "android.useAndroidX=true" > gradle.properties
+        echo "android.enableJetifier=true" >> gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
         echo "android.nonTransitiveRClass=false" >> gradle.properties
 
-        # پرانی تمام خراب یا متصادم SngineConfig فائلز کو صاف کر کے بلڈ فولڈر کے اندر درست پبلک سنٹیکس کے ساتھ بنانا
-        rm -f app/src/main/java/statull/app/webview/SngineConfig.java
-        mkdir -p app/src/main/java/statull/app/webview
-        cat << 'EOF' > app/src/main/java/statull/app/webview/SngineConfig.java
-        package statull.app.webview;
-
-        public class SngineConfig {
-            public static String Sngine_URL = "https://statull.com";
-            public static String Sngine_ONESIGNAL_APP_ID = "";
-            public static boolean SngineApp_JSCRIPT = true;
-            public static boolean SngineApp_FUPLOAD = true;
-            public static boolean SngineApp_CAMUPLOAD = true;
-            public static boolean SngineApp_ONLYCAM = false;
-            public static boolean SngineApp_MULFILE = true;
-            public static boolean SngineApp_LOCATION = true;
-            public static boolean SngineApp_RATINGS = true;
-            public static boolean SngineApp_PULLFRESH = true;
-            public static boolean SngineApp_PBAR = true;
-            public static boolean SngineApp_ZOOM = false;
-            public static boolean SngineApp_SFORM = false;
-            public static boolean SngineApp_OFFLINE = false;
-            public static boolean SngineApp_EXTURL = false;
-            public static boolean SngineApp_CERT_VERIFICATION = true;
-            public static String Sngine_F_TYPE = "*/*";
-            public static int ASWR_DAYS = 3;
-            public static int ASWR_TIMES = 10;
-            public static int ASWR_INTERVAL = 2;
-        }
-        EOF
-
-        # غائب شدہ پیکیجز 'package R' اور 'SngineConfig' کو مینوئلی تمام متعلہ فائلوں کے ہیڈرز میں زبردستی انجیکٹ کرنا
+        # جاوا فائلز میں غائب شدہ امپورٹس (R اور SngineConfig) کو پیکیج لائن کے فوراً بعد انجیکٹ کرنا
         for file in app/src/main/java/statull/app/webview/MainActivity.java app/src/main/java/statull/app/webview/DialogManager.java app/src/main/java/statull/app/webview/SplashScreen.java; do
           if [ -f "$file" ]; then
-            # پیکیج ڈیکلریشن کے فوراً بعد امپورٹس شامل کرنے کا سب سے محفوظ طریقہ
             sed -i 's|^package statull.app.webview;|package statull.app.webview;\nimport statull.app.webview.R;\nimport statull.app.webview.SngineConfig;|g' "$file"
           fi
         done
