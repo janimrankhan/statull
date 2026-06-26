@@ -27,14 +27,14 @@ jobs:
       with:
         gradle-version: 9.3.1
 
-    - name: Configure Android Project Settings
+    - name: Configure Android Project Settings and Overwrite Configs
       run: |
-        # ریسورس کلاس بائنڈنگز کو درست کرنے کے لیے مینوفیکچرنگ سیٹنگز
+        # ریسورس میپنگ کو درست کرنے کے لیے پراپرٹیز سیٹ کرنا
         echo "android.useAndroidX=true" > gradle.properties
         echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
         echo "android.nonTransitiveRClass=false" >> gradle.properties
 
-        # پرانی تمام متصادم SngineConfig فائلز کو صاف کر کے بلڈ فولڈر کے اندر دوبارہ بنانا
+        # پرانی تمام خراب یا متصادم SngineConfig فائلز کو صاف کر کے بلڈ فولڈر کے اندر درست پبلک سنٹیکس کے ساتھ بنانا
         rm -f app/src/main/java/statull/app/webview/SngineConfig.java
         mkdir -p app/src/main/java/statull/app/webview
         cat << 'EOF' > app/src/main/java/statull/app/webview/SngineConfig.java
@@ -64,11 +64,13 @@ jobs:
         }
         EOF
 
-        # 'package R does not exist' اور کلاس مسمیچ کے مسائل کو مستقل فکس کرنے کے لیے فائلوں کے ہیڈرز کو کلین کرنا
-        # ہم پرانی کیشے کو صاف کر کے فائلز کے اندر درست امپورٹ اسٹیٹمنٹس انپٹ کر رہے ہیں
-        sed -i 's/package statull.app.webview;/package statull.app.webview;\nimport statull.app.webview.R;\nimport statull.app.webview.SngineConfig;/g' app/src/main/java/statull/app/webview/MainActivity.java || true
-        sed -i 's/package statull.app.webview;/package statull.app.webview;\nimport statull.app.webview.R;\nimport statull.app.webview.SngineConfig;/g' app/src/main/java/statull/app/webview/DialogManager.java || true
-        sed -i 's/package statull.app.webview;/package statull.app.webview;\nimport statull.app.webview.R;\nimport statull.app.webview.SngineConfig;/g' app/src/main/java/statull/app/webview/SplashScreen.java || true
+        # غائب شدہ پیکیجز 'package R' اور 'SngineConfig' کو مینوئلی تمام متعلہ فائلوں کے ہیڈرز میں زبردستی انجیکٹ کرنا
+        for file in app/src/main/java/statull/app/webview/MainActivity.java app/src/main/java/statull/app/webview/DialogManager.java app/src/main/java/statull/app/webview/SplashScreen.java; do
+          if [ -f "$file" ]; then
+            # پیکیج ڈیکلریشن کے فوراً بعد امپورٹس شامل کرنے کا سب سے محفوظ طریقہ
+            sed -i 's|^package statull.app.webview;|package statull.app.webview;\nimport statull.app.webview.R;\nimport statull.app.webview.SngineConfig;|g' "$file"
+          fi
+        done
 
     - name: Build APK Directly from Project
       run: |
